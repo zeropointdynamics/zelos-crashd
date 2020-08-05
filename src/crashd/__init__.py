@@ -14,3 +14,16 @@
 # License along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
 # ======================================================================
+__version__ = "0.0.1"
+
+__title__ = "zelos-crashd"
+__description__ = "A zelos plugin for crash analysis."
+__url__ = "https://github.com/zeropointdynamics/zelos-crashd"
+__uri__ = __url__
+__doc__ = __description__ + " <" + __uri__ + ">"
+
+__author__ = "Zeropoint Dynamics"
+__email__ = "zelos@zeropointdynamics.com"
+
+__license__ = "AGPLv3"
+__copyright__ = "Copyright (c) 2020 Zeropoint Dynamics"
