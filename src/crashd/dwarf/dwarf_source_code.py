@@ -20,11 +20,10 @@ from termcolor import colored
 import os
 import html
 from pathlib import Path
+from typing import Optional
 
 from elftools.dwarf.descriptions import describe_form_class
 from elftools.elf.elffile import ELFFile
-
-from crashd.dwarf.dwarf_data import DwarfData, AddressMap
 
 
 def find_file(path, source_code_path):
@@ -267,11 +266,12 @@ def annotate_with_dwarf_data(zelos, binary_path, trace, taint_path):
     zelos_module_base = zelos.internal_engine.memory.get_module_base(
         binary_path
     )
-    # address_map = process_file(binary_path, zelos_module_base)
-    # dwarf_data = DwarfData(address_map, zelos.config.source_code_path)
-    dwarf_data = DwarfData(
-        binary_path, zelos.config.source_code_path, zelos_module_base
-    )
+    address_map = process_file(binary_path, zelos_module_base)
+    dwarf_data = DwarfData(address_map, zelos.config.source_code_path)
+    # TODO: The following uses the updated DwarfData
+    # dwarf_data = DwarfData(
+    #     binary_path, zelos.config.source_code_path, zelos_module_base
+    # )
     taint_path._dwarf_data = dwarf_data
 
 
@@ -514,6 +514,137 @@ def get_function_info(filename, taint_graph, zelos_module_base):
                     addr2func[addr] = f
     # print("Done parsing dwarf info")
     return addr2func
+
+
+class AddressEntry:
+    def __init__(self, low, high, file, line_num):
+        self.low = low
+        self.high = high
+        self.file = file
+        self.line_num = line_num
+
+    def __str__(self):
+        return f"(0x{self.low:x}-0x{self.high:x}: {self.file}:{self.line_num})"
+
+
+class AddressMap:
+    def __init__(self):
+        self._address_low_high = []
+        self._cache = {}
+        self._source2addr_range = {}
+
+    def __str__(self):
+        return [entry.__str__() for entry in self._address_low_high].__str__()
+
+    def files(self):
+        return {entry.file for entry in self._address_low_high}
+
+    def get_addr_range_from_source(self, file, line_num):
+        return self._source2addr_range.get(f"{file}{line_num}", (None, None))
+
+    def _add_cache(self, addr, file, line):
+        self._cache[addr] = (file, line - 1)
+
+    def add(self, low, high, file, line):
+        file = file.decode()
+        self._add_cache(low, file, line)
+        self._source2addr_range[f"{file}{line}"] = (low, high)
+        for addr in range(low, high):
+            self._add_cache(addr, file, line)
+
+        entry = AddressEntry(low, high, file, line)
+        self._address_low_high.append(entry)
+        self._address_low_high.sort(key=lambda x: x.low)
+
+    def get(self, addr: int, default=(None, None)):
+        cached_val = self._cache.get(addr, None)
+        if cached_val is not None:
+            return cached_val
+
+        idx = self.binary_search(addr)
+        if idx is not None:
+            entry = self._address_low_high[idx]
+            retval = (entry.file, entry.line_num - 1)
+            self._cache[addr] = retval
+            return retval
+
+        return default
+
+    def _attach_src_to_external_addrs(self, trace, dwarf_data):
+        """
+        Certain addresses in the trace are not associated with source
+        code because they are in external modules. We associate those
+        addresses with source code from the last line that occurred
+        before moving to the external module.
+        """
+        # External modules can call each other. This means that the same
+        # address could have multiple candidates for what address should
+        # be associated with them.
+        files = dwarf_data._file_lines
+
+        current_source = None
+        current_file = None
+        current_line = None
+        smeared = {}
+        for addr in trace:
+            file, line_num = self.get(addr)
+
+            if file in files and addr not in smeared:
+                dwarf_data._addr2source[addr] = files[file][line_num]
+                current_source = files[file][line_num]
+                current_file = file
+                current_line = line_num
+            elif current_source is not None:
+                dwarf_data._addr2source[addr] = "within " + current_source
+                self._add_cache(addr, current_file, current_line + 1)
+                smeared[addr] = current_source
+
+    def binary_search(self, x):
+        low = 0
+        mid = 0
+        high = len(self._address_low_high) - 1
+        while low <= high:
+            mid = (high + low) // 2
+            entry = self._address_low_high[mid]
+            if entry.low <= x < entry.high:
+                return mid
+            if entry.low == entry.high and entry.low == x:
+                return mid
+
+            # Check if x is present at mid
+            if entry.low < x:
+                low = mid + 1
+
+            # If x is greater, ignore left half
+            elif entry.low > x:
+                high = mid - 1
+
+        # If we reach here, then the element was not present
+        return None
+
+
+class DwarfData:
+    def __init__(self, address_map, source_code_path):
+        self._address_map = address_map
+        self._file_lines = {}
+        self._file_to_syspath = {}
+        self._addr2source = {}
+
+        self.setup_file_lines(source_code_path)
+
+    def setup_file_lines(self, source_code_path):
+        for filename in self._address_map.files():
+            located_filename = find_file(filename, source_code_path)
+            if located_filename is None:
+                continue
+            f = open(located_filename, "r")
+            self._file_to_syspath[filename] = located_filename
+            # Keep this keyed by the original file name so that later on we
+            # can find these lines
+            self._file_lines[filename] = list(f.readlines())
+
+    def get_source(self, addr: int) -> Optional[str]:
+        return self._addr2source.get(addr, None)
 
 
 def decode_file_lines(dwarfinfo, offset):

@@ -14,5 +14,5 @@
 # License along with this program.  If not, see
 # <http://www.gnu.org/licenses/>.
 # ======================================================================
-from .dwarf_data import *
+# from .dwarf_data import *
 from .dwarf_source_code import *

@@ -52,21 +52,21 @@ class TcgTest(unittest.TestCase):
         taint_graph = z.plugins.dataflow.reverse_taint(0x1606)
 
         expected_taint_path = {
-            82862: [(-1, -1, -1)],
-            82861: [(82862, "rax", "0x0")],
-            82860: [(82861, 0x7F000008EC50, "0x0")],
-            82856: [(82860, "rdi", "0x0")],
-            82855: [(82856, "rax", "0x0")],
-            82854: [(82855, 0x7F000008EC78, "0x0")],
-            82853: [(82854, "rax", "0x0")],
-            82852: [(82853, 0x7F000008EC68, "0x0")],
-            82847: [(82852, "rdi", "0x0")],
-            82846: [(82847, "rax", "0x0")],
-            82845: [(82846, 0x7F000008EC98, "0x0")],
+            # 0x1606: [(0x1606, -1, -1)],
+            0x1602: [(0x1606, "rax", "0x0")],
+            0x15FE: [(0x1602, 0x7F000008EC50, "0x0")],
+            0x1627: [(0x15FE, "rdi", "0x0")],
+            0x1623: [(0x1627, "rax", "0x0")],
+            0x161F: [(0x1623, 0x7F000008EC78, "0x0")],
+            0x161B: [(0x161F, "rax", "0x0")],
+            0x1617: [(0x161B, 0x7F000008EC68, "0x0")],
+            0x1646: [(0x1617, "rdi", "0x0")],
+            0x1642: [(0x1646, "rax", "0x0")],
+            0x163A: [(0x1642, 0x7F000008EC98, "0x0")],
         }
 
         for idx, flow_targets in expected_taint_path.items():
-            taint_path = taint_graph._path
+            taint_path = taint_graph._reduced_path
             flow_idx = flow_targets[0][0]
             flow_use = flow_targets[0][1]
             flow_val = flow_targets[0][2]
@@ -75,9 +75,9 @@ class TcgTest(unittest.TestCase):
                 flow_idx, taint_path[idx], msg=f"{idx} {flow_targets}"
             )
             taint_node = taint_path[idx][flow_idx]
-            self.assertEqual(
-                flow_idx, taint_node.idx, msg=f"{flow_idx} {taint_node}"
-            )
+            # self.assertEqual(
+            #     flow_idx, taint_node.idx, msg=f"{flow_idx} {taint_node}"
+            # )
             self.assertEqual(
                 flow_use, taint_node.use, msg=f"{flow_use} {taint_node}"
             )

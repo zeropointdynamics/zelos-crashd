@@ -17,7 +17,7 @@
 
 import unittest
 from os import path
-from crashd.dwarf import DwarfData
+from crashd.dwarf.dwarf_data import DwarfData
 
 DATA_DIR = path.join(path.dirname(path.abspath(__file__)), "data")
 
