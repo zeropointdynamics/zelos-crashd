@@ -1,1 +1,8 @@
+graft src/zelos
+
 include src/crashd/dwarf/template.html
+include LICENSE *.md *.toml *.yml *.yaml *.ini .flake8
+
+# Ignore
+global-exclude *.py[co]
+global-exclude __pycache__
