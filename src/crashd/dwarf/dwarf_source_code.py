@@ -310,8 +310,9 @@ def show_tainted_source(zelos, binary_path, trace, taint_path):
     address_map = dwarf_data._address_map
     address_map._attach_src_to_external_addrs(trace, dwarf_data)
 
-    # from .render.graphviz import render_source_graph
-    # render_source_graph(taint_path, address_map, files)
+    from crashd.taint.render.graphviz import render_source_graph
+
+    render_source_graph(taint_path, address_map, files)
 
     (nodes, edges) = get_nodes_and_edges(taint_path, address_map)
     if len(file_to_syspath) > 0:

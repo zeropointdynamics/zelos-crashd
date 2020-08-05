@@ -357,18 +357,16 @@ def analyze_crash(z, dataflow, inst_address, mem_address):
         logger.notice(f"Wrote file: {zcovPath}")
     except Exception:
         logger.exception("Unable to show source code")
-    if False:
-        # This is all debug-graph generation
+    if True:
+        # This is all png graph generation
         from .render.graphviz import (
             render_reduced_path_taint_graph,
             render_path_taint_graph,
-            render_source_graph,
         )
 
-        # print(taint_path)
         render_reduced_path_taint_graph(logger, taint_path)
         render_path_taint_graph(logger, taint_path, trace)
-        render_source_graph(logger, taint_path, trace)
+
         # self.get_ida_taint_overlay(
         #     z.internal_engine.main_module.EntryPoint,
         #     trace,
