@@ -55,6 +55,10 @@ CommandLineOption(
 )
 
 CommandLineOption(
+    "taint_output", default="", help="Specify taint output location.",
+)
+
+CommandLineOption(
     "source_code_path", default="", help="path to search for source code files"
 )
 

@@ -326,8 +326,8 @@ def show_tainted_source(zelos, binary_path, trace, taint_path):
             zelos.config.source_code_path,
         )
 
-    # The remaining is debug-only output
-    return
+    if not zelos.config.taint_output == "terminal":
+        return
 
     # print("generated .zcov file")
     crash_line = None
@@ -339,7 +339,7 @@ def show_tainted_source(zelos, binary_path, trace, taint_path):
         source_path[(file, line)] = v
         if file in files:
             if crash_line is None:
-                new_line = colored(
+                files[file][line] = colored(
                     # f"!0x{k:x}" +
                     files[file][line] + str(v) + "\n",
                     color="red",
@@ -347,7 +347,7 @@ def show_tainted_source(zelos, binary_path, trace, taint_path):
                 crash_line = line
                 changed_file_lines[file].append(line)
             else:
-                new_line = colored(
+                files[file][line] = colored(
                     # f"*0x{k:x}" +
                     files[file][line] + str(v) + "\n",
                     color="white",
@@ -355,7 +355,6 @@ def show_tainted_source(zelos, binary_path, trace, taint_path):
                 )
                 changed_file_lines[file].append(line)
 
-            files[file][line] = new_line
     # print("Updated source lines with data flow")
     count = 0
     # Get first trace line that is in the source
@@ -405,10 +404,11 @@ def show_tainted_source(zelos, binary_path, trace, taint_path):
                 i += 1
             if lines_to_print[-1] != "...\n":
                 lines_to_print.append("...\n")
-        # print("".join(lines_to_print))
+        print("".join(lines_to_print))
+
     # print("Changed lines: ")
-    # print(changed_lines)
-    # print("Num lines: ", len(changed_lines))
+    # print(changed_file_lines)
+    # print("Num lines: ", len(changed_file_lines))
 
 
 def process_file(filename, zelos_module_base):
