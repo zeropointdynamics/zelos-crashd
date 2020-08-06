@@ -2,9 +2,11 @@
 
 A plugin for [Zelos](https://github.com/zeropointdynamics/zelos) to enhance crash triaging by performing dataflow & root cause analysis.
 
-## Prerequisites
+## Optional Prerequisites
 
-This plugin depends on [Graphviz](https://graphviz.org/) to render control flow graphs. Instructions for installing Graphviz locally can be found [here](https://graphviz.org/download/). 
+This plugin has an optional dependency on the [graphviz](https://pypi.org/project/graphviz/) package to render control flow graphs to png. The graphviz python package can be installed normally via `pip install graphviz`, but will also require [Graphviz](https://www.graphviz.org/) itself to be installed locally as well. Instructions for installing Graphviz locally can be found [here](https://graphviz.org/download/). 
+
+If you do not wish to install the graphviz package or Graphviz, you can safely ignore this optional dependency and zelos-crashd will still work as intended, but control flow graphs will not be rendered to png.
 
 ## Installation
 
