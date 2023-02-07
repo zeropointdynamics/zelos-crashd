@@ -41,7 +41,7 @@ CLASSIFIERS = [
 ]
 INSTALL_REQUIRES = [
     "zelos>=0.2.0",
-    "pyelftools@git+git://github.com/eliben/pyelftools.git@7ca16680f4eb01e6b6bbbc222f18de56460426d1",
+    "pyelftools@git+ssh://git@github.com/eliben/pyelftools.git@7ca16680f4eb01e6b6bbbc222f18de56460426d1",
 ]
 
 ########################################################################
